@@ -1,24 +1,23 @@
 <template>
-  <div id="app">
-    <div id="nav">
-      <router-link to="/box">回転箱</router-link>
-      <router-link to="/texture-map">環境マッピング</router-link>
-    </div>
-    <router-view />
+  <div id="TextureMappingPage">
+    <TextureMapping></TextureMapping>
   </div>
 </template>
 
 <script>
-// import BoxPage from "./pages/BoxPage.vue";
+
+import TextureMapping from "../components/TextureMapping";
 
 export default {
-  name: "app",
+  name: "TextureMappingPage",
   components: {
-    // BoxPage
+      TextureMapping,
   },
   data() {
     return {
-      currentPageNum: 1
+      speed: 0.02,
+      color: "0xf54242",
+        size: 1
     };
   }
 };
