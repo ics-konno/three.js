@@ -1,7 +1,5 @@
 <template>
-  <div>
     <canvas id="canvas" width="1200" height="600"></canvas>
-  </div>
 </template>
 
 <script>
@@ -28,22 +26,24 @@ export default {
     let renderer = null;
     const camera = new THREE.PerspectiveCamera(
       40,
-      window.innerWidth / window.innerHeight,
+      1200 / 600,
       1,
-      20000
+      5000
     );
-    const light = new THREE.DirectionalLight(0xffffff);
+    const ambient = new THREE.AmbientLight(0xffffff);
+    const pointLight = new THREE.PointLight(0xffffff, 2)
 
     // テクスチャー
-    let pngCubeRenderTarget;
+    let reflectionCube;
     let pngBackground;
     return {
       scene,
       renderer,
       camera,
-      light,
-      pngCubeRenderTarget,
-      pngBackground
+      reflectionCube,
+      pngBackground,
+      ambient,
+      pointLight
     };
   },
   mounted() {
@@ -52,58 +52,43 @@ export default {
       antialias: true,
       canvas: $canvas
     });
-    this.camera.position.set(0, 0, 10);
-    this.light.position.set(0, 0, 100);
-    this.scene.add(this.light)
-    this.scene.add(new THREE.AmbientLight(0x111111));
+    this.renderer.setSize(1200, 600)
+    this.renderer.setClearColor(0xefefef)
 
-      const light2 = new THREE.DirectionalLight(0xffffff, 2)
-      light2.position.set(1,1,1).normalize()
-      this.scene.add(light2)
+    this.camera.position.set(0, 0, 20);
+
+    this.scene.add(this.ambient)
+    this.scene.add(this.pointLight)
+    // const directionalLight = new THREE.DirectionalLight(0xffffff)
+    // directionalLight.position.set(1,1,1)
+    // this.scene.add(directionalLight)
 
     // テクスチャーをロード
-    const path = "../assets/texture/skyboxsun25deg/";
+    const path = "./skyboxsun25deg/";
+    // const path = "./static/skyboxsun25deg/";
     let urls = [
-      path + "px.jpg",
-      path + "nx.jpg",
-      path + "py.jpg",
-      path + "ny.jpg",
-      path + "pz.jpg",
-      path + "nz.jpg"
+      require(path + "px.jpg"),
+      require(path + "nx.jpg"),
+      require(path + "py.jpg"),
+      require(path + "ny.jpg"),
+      require(path + "pz.jpg"),
+      require(path + "nz.jpg")
     ];
-    const cubeTexture = new THREE.CubeTextureLoader().load(urls);
-    cubeTexture.mapping = THREE.CubeReflectionMapping;
-    cubeTexture.format = THREE.RGBFormat
+    this.reflectionCube = new THREE.CubeTextureLoader().load(urls);
+    this.reflectionCube.mapping = THREE.CubeReflectionMapping;
+    this.reflectionCube.format = THREE.RGBFormat
 
     // 背景にテクスチャを設置
-    this.scene.background = cubeTexture;
+    this.scene.background = this.reflectionCube;
 
     // 球に環境マッピングを適用
     // 球
-    const geometry = new THREE.SphereBufferGeometry(5, 64, 64);
-    // const material = new THREE.MeshBasicMaterial({ envMap: cubeTexture });
-    const material = new THREE.MeshBasicMaterial();
+    const geometry = new THREE.SphereGeometry(5, 64, 64);
+    const material = new THREE.MeshPhongMaterial({ envMap: this.reflectionCube });
+    // const imgPath = require("./earth.jpg")
+    // const material = new THREE.MeshStandardMaterial({map: new THREE.TextureLoader().load(imgPath)});
     const sphereMesh = new THREE.Mesh(geometry, material);
     this.scene.add(sphereMesh);
-
-      var loader = new THREE.TextureLoader();
-
-      loader.load("nx.jpg", function(texture){
-          createBox(texture); // mesh作成
-          // render();
-      });
-
-
-      function createBox(texture){
-          const box = new THREE.Mesh(
-              new THREE.BoxGeometry(100, 100, 100),
-              new THREE.MeshLambertMaterial({map: texture})  // {map: texture}がキモ
-          );
-          box.position.set(0, 0, 0);
-
-          // シーンに追加
-          this.scene.add(box);
-      }
 
     // オービットコントロール
     // eslint-disable-next-line no-unused-vars
